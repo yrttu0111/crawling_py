@@ -189,7 +189,7 @@ with open(SEARCH_TEXT+'result.csv', 'a', newline='') as file:
             
             #app-root > div > div.XUrfU > div.zRM9F > a:nth-child(4) > svg > path
             #app-root > div > div.XUrfU > div.zRM9F > a:nth-child(4)
-           
+
         finally:
             driver.switch_to.default_content()
 
