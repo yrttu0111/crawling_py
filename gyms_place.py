@@ -10,7 +10,7 @@ from webdriver_manager.chrome import ChromeDriverManager
 
 DRIVER_URL = "./chromedriver/chromedriver"
 NAVER_URL = "https://map.naver.com/v5/search"
-SEARCH_TEXT = "가천대 헬스장"
+SEARCH_TEXT = "강남구 "
 
 #브라우저 꺼짐 방지
 chrome_options = Options()
@@ -29,21 +29,21 @@ time.sleep(3)
 # for initalize
 driver.switch_to.default_content()
 
-with open('result.csv', 'w', newline='') as file:
+with open(SEARCH_TEXT+'result.csv', 'w', newline='') as file:
     writer = csv.writer(file)
-    writer.writerow(["name", "type" ,"address", "phone", "introduce"])
+    writer.writerow(["name", "type" ,"address", "phone", "introduce", "addition"])
 
 # search keyword
 search_box = driver.find_element(By.CSS_SELECTOR ,".input_search")
 search_box.send_keys(SEARCH_TEXT + '헬스장')
 
-time.sleep(1)
+time.sleep(1.5)
 
 search_box.send_keys(Keys.ENTER)
 
-time.sleep(1.5)
-
-with open('result.csv', 'a', newline='') as file:
+time.sleep(3)
+page = 1
+with open(SEARCH_TEXT+'result.csv', 'a', newline='') as file:
     writer = csv.writer(file)
     
     while True:
@@ -55,19 +55,23 @@ with open('result.csv', 'a', newline='') as file:
             for i in range(10):
                 driver.execute_script("arguments[0].scrollTo(0, arguments[0].scrollHeight)", scroll_container)
                 time.sleep(0.2)
-
         finally:
+            time.sleep(1)
             driver.switch_to.default_content()
 
         # Get Data and write
         try:
+            driver.switch_to.default_content()
             driver.switch_to.frame("searchIframe")
             boxes = driver.find_elements(By.CLASS_NAME ,"VLTHu")
-
-            for i in range(len(boxes)):
+            boxesLen = len(boxes)
+            print(boxesLen)
+            for i in range(boxesLen):
                 try:
                     isAdd = driver.find_element(By.CSS_SELECTOR ,"#_pcmap_list_scroll_container > ul > li:nth-child(" + str(i + 1) + ") > div.qbGlu > a > span").text
                     print(isAdd)
+                    boxesLen += 2
+                    print(boxesLen)
                     if isAdd == '광고':
                         continue
                 except:
@@ -76,15 +80,16 @@ with open('result.csv', 'a', newline='') as file:
                 driver.find_element(By.CSS_SELECTOR ,"#_pcmap_list_scroll_container > ul > li:nth-child(" + str(i + 1) + ") > div.qbGlu > div > a.P7gyV").click()
                 driver.switch_to.default_content()
 
-                time.sleep(2)
+                time.sleep(1)
 
                 try:
                     driver.switch_to.frame("entryIframe")
-                    time.sleep(0.5)
+                    print('change iframe entry')
+                    time.sleep(0.3)
                     address_opener = driver.find_element(By.XPATH ,'//*[@id="app-root"]/div/div/div/div[5]/div/div[2]/div/div/div[1]/div/a/span[2]')
                     address_opener.click()
                     driver.find_element(By.CSS_SELECTOR,'body').send_keys(Keys.PAGE_DOWN)
-                    time.sleep(0.6)
+                    time.sleep(0.4)
                     # businessHours_opener = driver.find_element(By.XPATH ,'//*[@id="app-root"]/div/div/div/div[5]/div/div[2]/div/div/div[3]/div/a')
                     # businessHours_opener.click()
                     text_css_selectors = [
@@ -102,11 +107,23 @@ with open('result.csv', 'a', newline='') as file:
                             break  # 요소를 찾고 클릭했으므로 반복문 종료
                         except :
                             pass  # 해당 요소를 찾지 못한 경우 다음 CSS 선택자로 이동
-                    time.sleep(0.3)
+                    time.sleep(0.2)
                     driver.find_element(By.CSS_SELECTOR,'body').send_keys(Keys.PAGE_UP)
-                    time.sleep(0.5)
+                    time.sleep(0.2)
                     address_opener.click()
-                    time.sleep(0.5)
+                    time.sleep(0.2)
+
+                    addition_css_selectors = [
+                    '#app-root > div > div > div > div:nth-child(6) > div > div:nth-child(2) > div > div > div.O8qbU.Uv6Eo > div > div',
+                    '#app-root > div > div > div > div:nth-child(5) > div > div:nth-child(2) > div.place_section_content > div > div.O8qbU.Uv6Eo > div > div'
+                    ]
+
+                    for css_selector in addition_css_selectors:
+                        try:
+                            place_addition_select = driver.find_element(By.CSS_SELECTOR, css_selector)
+                            break  # 요소를 찾고 클릭했으므로 반복문 종료
+                        except :
+                            pass  # 해당 요소를 찾지 못한 경우 다음 CSS 선택자로 이동
                     
 
                     page_source = driver.page_source
@@ -136,32 +153,43 @@ with open('result.csv', 'a', newline='') as file:
                         place_introduce = text_opener.text
                     except:
                         place_introduce = '미등록'
+                    try:
+                        place_addition = place_addition_select.text
+                    except:
+                        place_addition = '미등록'
 
                     
-
-                    print([place_name,place_type, place_address, place_phone, place_introduce])
-                    # writer.writerow([place_name, place_address + '(' + place_post + ')', place_phone])
+                    print(place_addition)
+                    print([place_name,place_type, place_address, place_phone, place_introduce, place_addition])
+                    writer.writerow([place_name,place_type, place_address, place_phone,place_introduce, place_addition])
                 except Exception as err:
                     print(f'Unexpected {err=}, {type(err)=}')
 
                 finally:
                     driver.switch_to.default_content()
                     driver.switch_to.frame("searchIframe")
-
-            next_page_button_svg = driver.find_element(By.CSS_SELECTOR ,'#app-root > div > div.XUrfU > div.zRM9F > a.eUTV2 > svg')[1]    
-            is_page_end = driver.execute_script("return window.getComputedStyle(arguments[0]).getPropertyValue('opacity') === '0.4'", next_page_button_svg)
-
-            if is_page_end == True:
-                break
-                    
+                    print('change iframe search')
+            time.sleep(0.5)
+            
         finally:
             driver.switch_to.default_content()
         
         # goto next page
         try:
+            print('goto next page')
             driver.switch_to.frame("searchIframe")
-            frame = driver.find_element(By.CSS_SELECTOR ,'#app-root > div > div.XUrfU > div.zRM9F > a.eUTV2')[1]
+            frame = driver.find_elements(By.CSS_SELECTOR ,'#app-root > div > div.XUrfU > div.zRM9F > a.eUTV2')[1]
+            aria_disabled = frame.get_attribute('aria-disabled')
+            if aria_disabled == 'true':
+                end = True
+                print('end')
+                break
             frame.click()
+            page += 1
+            
+            #app-root > div > div.XUrfU > div.zRM9F > a:nth-child(4) > svg > path
+            #app-root > div > div.XUrfU > div.zRM9F > a:nth-child(4)
+           
         finally:
             driver.switch_to.default_content()
 
