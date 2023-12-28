@@ -11,7 +11,7 @@ from webdriver_manager.chrome import ChromeDriverManager
 
 
 DRIVER_URL = "./chromedriver/chromedriver"
-NAVER_URL = "https://www.woondoc.com/search/coach"
+URL = "https://www.woondoc.com/search/coach"
 SEARCH_TEXT = "강남구 역삼동"
 
 #브라우저 꺼짐 방지
@@ -24,7 +24,7 @@ chrome_options.add_experimental_option("excludeSwitches", ["enable-logging"])
 Service = Service(executable_path=ChromeDriverManager().install())
 driver = webdriver.Chrome(service=Service, options=chrome_options)
 
-driver.get(NAVER_URL)
+driver.get(URL)
 
 time.sleep(10)
 
@@ -106,13 +106,13 @@ with open(SEARCH_TEXT+ ' 운동닥터 ' +'result.csv', 'a', newline='') as file:
 
                 except Exception as err:
                     print(f'Unexpected {err=}, {type(err)=}')
-                    
+
                 finally:
                     driver.switch_to.default_content()
                     driver.close()
                     driver.switch_to.window(driver.window_handles[0])
                     print('change window 0')
-                    
+
             end = True
             print('end')
             break
