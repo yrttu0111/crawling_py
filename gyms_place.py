@@ -10,7 +10,7 @@ from webdriver_manager.chrome import ChromeDriverManager
 
 DRIVER_URL = "./chromedriver/chromedriver"
 NAVER_URL = "https://map.naver.com/v5/search"
-SEARCH_TEXT = "강남구 "
+SEARCH_TEXT = "송파구 "
 
 #브라우저 꺼짐 방지
 chrome_options = Options()
@@ -41,7 +41,7 @@ time.sleep(1.5)
 
 search_box.send_keys(Keys.ENTER)
 
-time.sleep(3)
+time.sleep(3.5)
 page = 1
 with open(SEARCH_TEXT+'result.csv', 'a', newline='') as file:
     writer = csv.writer(file)
@@ -56,7 +56,7 @@ with open(SEARCH_TEXT+'result.csv', 'a', newline='') as file:
                 driver.execute_script("arguments[0].scrollTo(0, arguments[0].scrollHeight)", scroll_container)
                 time.sleep(0.2)
         finally:
-            time.sleep(1)
+            time.sleep(1.3)
             driver.switch_to.default_content()
 
         # Get Data and write
@@ -108,6 +108,21 @@ with open(SEARCH_TEXT+'result.csv', 'a', newline='') as file:
                         except :
                             pass  # 해당 요소를 찾지 못한 경우 다음 CSS 선택자로 이동
                     time.sleep(0.2)
+                    times_css_selectors = [
+                    '#app-root > div > div > div > div:nth-child(6) > div > div:nth-child(2) > div.place_section_content > div > div.O8qbU.pSavy > div > a > div.w9QyJ.vI8SM',
+                    '#app-root > div > div > div > div:nth-child(5) > div > div:nth-child(2) > div.place_section_content > div > div.O8qbU.pSavy > div > a > div.w9QyJ.vI8SM',
+                    '#app-root > div > div > div > div:nth-child(5) > div > div:nth-child(2) > div > div > div.O8qbU.pSavy > div > a > div.w9QyJ.vI8SM'
+                    '#app-root > div > div > div > div:nth-child(6) > div > div:nth-child(2) > div > div > div.O8qbU.pSavy > div > a > div.w9QyJ.vI8SM'
+                    ]
+
+                    for css_selector in times_css_selectors:
+                        try:
+                            place_times_select = driver.find_element(By.CSS_SELECTOR, css_selector).click()
+                            break  # 요소를 찾고 클릭했으므로 반복문 종료
+                        except :
+                            pass  # 해당 요소를 찾지 못한 경우 다음 CSS 선택자로 이동
+
+                    
                     driver.find_element(By.CSS_SELECTOR,'body').send_keys(Keys.PAGE_UP)
                     time.sleep(0.2)
                     address_opener.click()
@@ -124,7 +139,10 @@ with open(SEARCH_TEXT+'result.csv', 'a', newline='') as file:
                             break  # 요소를 찾고 클릭했으므로 반복문 종료
                         except :
                             pass  # 해당 요소를 찾지 못한 경우 다음 CSS 선택자로 이동
+
                     
+                    
+                        
 
                     page_source = driver.page_source
                     soup = BeautifulSoup(page_source, "html.parser")
@@ -150,17 +168,42 @@ with open(SEARCH_TEXT+'result.csv', 'a', newline='') as file:
                         place_phone = '미등록'
 
                     try:
-                        place_introduce = text_opener.text
+                        place_introduce = text_opener.text.encode('cp949', 'ignore').decode('cp949')
                     except:
                         place_introduce = '미등록'
                     try:
-                        place_addition = place_addition_select.text
+                        place_addition = place_addition_select.text.encode('cp949', 'ignore').decode('cp949')
                     except:
                         place_addition = '미등록'
 
+                    try:
+                        place_time1 = driver.find_element(By.CSS_SELECTOR ,"#app-root > div > div > div > div:nth-child(5) > div > div:nth-child(2) > div.place_section_content > div > div.O8qbU.pSavy > div > a > div:nth-child(2) > div > span").text.encode('cp949', 'ignore').decode('cp949')
+                        place_time1 = place_time1.split('\n')
+                        print('1')
+                    except:
+                        try:
+                            place_time1 = driver.find_element(By.CSS_SELECTOR ,"#app-root > div > div > div > div:nth-child(6) > div > div:nth-child(2) > div.place_section_content > div > div.O8qbU.pSavy > div > a > div:nth-child(2) > div > span").text.encode('cp949', 'ignore').decode('cp949')
+                            place_time1 = place_time1.split('\n')  
+                            print('2')              
+                        except:
+                            try:
+                                place_time1 = driver.find_element(By.CSS_SELECTOR ,"#app-root > div > div > div > div:nth-child(5) > div > div:nth-child(2) > div > div > div.O8qbU.pSavy > div > a > div:nth-child(2) > div > span").text.encode('cp949', 'ignore').decode('cp949')
+                                place_time1 = place_time1.split('\n')
+                                print('3')
+                            except:
+                                try:
+                                    place_time1 = driver.find_element(By.CSS_SELECTOR ,"#app-root > div > div > div > div:nth-child(6) > div > div:nth-child(2) > div > div > div.O8qbU.pSavy > div > a > div:nth-child(2) > div > span").text.encode('cp949', 'ignore').decode('cp949')
+                                    place_time1 = place_time1.split('\n')
+                                    print('4')
+                                except:
+                                    place_time1 = '미등록'
                     
-                    print(place_addition)
-                    print([place_name,place_type, place_address, place_phone, place_introduce, place_addition])
+                    if place_time1[0] == '매일':
+                        print('매일이구나') 
+
+                    place_time1 = ', '.join(place_time1)
+                    # print(place_name,place_time1)
+                    print([place_name,place_type, place_address, place_phone, place_introduce, place_addition, place_time1])
                     writer.writerow([place_name,place_type, place_address, place_phone,place_introduce, place_addition])
                 except Exception as err:
                     print(f'Unexpected {err=}, {type(err)=}')

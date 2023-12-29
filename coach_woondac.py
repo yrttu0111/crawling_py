@@ -33,24 +33,20 @@ driver.switch_to.default_content()
 
 with open(SEARCH_TEXT+ ' 운동닥터 ' +'result.csv', 'w', newline='' ) as file:
     writer = csv.writer(file)
-    writer.writerow(["name", "introduce", "price", "gym_address"])
+    writer.writerow(["name", "introduce","gyms_mame", "gym_address"])
 
 # search keyword
 search_box = driver.find_element(By.CSS_SELECTOR ,"#search_keyword")
 search_box.send_keys(SEARCH_TEXT)
-
 time.sleep(1.5)
 
 search_box.send_keys(Keys.ENTER)
-
 time.sleep(2)
-
 
 search_list = driver.find_elements(By.CSS_SELECTOR ,"#__next > div > div > div.searchTabWrap > div.searchBarWrap > div:nth-child(4) > div > ul > li.SearchList__SearchBarList-sc-z0gr3-1.hpLQfz.list-group-item.focus")
 search_list[0].click()
 
 time.sleep(5)
-
 
 with open(SEARCH_TEXT+ ' 운동닥터 ' +'result.csv', 'a', newline='') as file:
     writer = csv.writer(file)
@@ -78,6 +74,7 @@ with open(SEARCH_TEXT+ ' 운동닥터 ' +'result.csv', 'a', newline='') as file:
                     print('change window 1')
                     time.sleep(0.5)
 
+                    # 항목별 데이터 수집
                     try:
                         name = driver.find_element(By.CSS_SELECTOR ,"#__next > div > div:nth-child(2) > div > section > div.grayBackground > div > div > div.col-md-5 > div > div.upside > div > div:nth-child(1) > div:nth-child(2) > div.coachName").text.split(' ')[0].encode('cp949', 'ignore').decode('cp949')
                     except:
@@ -96,13 +93,20 @@ with open(SEARCH_TEXT+ ' 운동닥터 ' +'result.csv', 'a', newline='') as file:
                     time.sleep(0.5)
                     driver.find_element(By.CSS_SELECTOR ,"#__next > div > div:nth-child(2) > div > section > div.detail_menu__Menu-sc-oi2f2m-0.hEYhlP > div.tabWrap > div > div:nth-child(2)").click()
                     time.sleep(0.5)
+
                     try:
                         gym_address = driver.find_element(By.CSS_SELECTOR ,"#__next > div > div:nth-child(2) > div > section > div.grayBackground > div > div > div.col-md-7 > div > div > div > div:nth-child(1) > div.contentWrap > div:nth-child(2) > div").text.replace(" 주소 복사", "").encode('cp949', 'ignore').decode('cp949')
                     except:
-                        gym_address = "헬스장 없음"
+                        gym_address = "헬스장 주소 없음"
 
-                    print([name, introduce, price, gym_address])
-                    writer.writerow([name, introduce, price,gym_address])
+                    try:
+                        gym_name = driver.find_element(By.CSS_SELECTOR ,"#__next > div > div:nth-child(2) > div > section > div.grayBackground > div > div > div.col-md-7 > div > div > div > div:nth-child(1) > div.contentWrap > div:nth-child(1) > strong").text.encode('cp949', 'ignore').decode('cp949')
+                    except:
+                        gym_name = "헬스장 이름 없음"
+
+                    #console 및 저장 
+                    print([name, introduce, gym_name, gym_address])
+                    writer.writerow([name, introduce, gym_name, gym_address])
 
                 except Exception as err:
                     print(f'Unexpected {err=}, {type(err)=}')
@@ -116,6 +120,6 @@ with open(SEARCH_TEXT+ ' 운동닥터 ' +'result.csv', 'a', newline='') as file:
             end = True
             print('end')
             break
+
         finally:
             driver.switch_to.default_content()
-            
